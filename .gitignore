@@ -1,0 +1,20 @@
+# Vendored Node.js toolchain (security: not installed system-wide)
+vendor/node-v26.13.0-linux-x64/
+
+# Rust
+target/
+Cargo.lock
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+src-tauri/tmp/
+
+# Frontend
+node_modules/
+dist/
+dist-tauri/
+*.local
+
+# OS
+.DS_Store
