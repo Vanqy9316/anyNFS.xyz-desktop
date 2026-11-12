@@ -289,6 +289,20 @@ fn bridge_js_for_domain(domain: &str) -> String {
     }
 }
 
+/// Convert a domain into a Tauri-safe webview window label.
+/// Tauri labels may only contain alphanumeric chars, `-`, `/`, `:` and `_`;
+/// dots (as in `nfsu2mod.xyz`) are rejected, so we map them to `-`.
+fn domain_to_label(domain: &str) -> String {
+    domain
+        .chars()
+        .map(|c| if c.is_alphanumeric() || c == '-' || c == '/' || c == ':' || c == '_' {
+            c
+        } else {
+            '-'
+        })
+        .collect()
+}
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -429,12 +443,13 @@ async fn anynfs_select_domain(
 
     // 6. Open (or reuse) the isolated playback webview for this domain.
     let domain_for_js = domain.clone();
+    let label = domain_to_label(&domain);
     let url = format!("https://{domain}/");
     let parsed = Url::parse(&url).map_err(|e| e.to_string())?;
     {
         let mut windows = state.windows.lock().map_err(|e| e.to_string())?;
-        if !windows.contains_key(&domain) {
-            let w = WebviewWindowBuilder::new(&app, &domain, WebviewUrl::External(parsed))
+        if !windows.contains_key(&label) {
+            let w = WebviewWindowBuilder::new(&app, &label, WebviewUrl::External(parsed))
                 .title(format!("anyNFS.xyz — {domain}"))
                 .inner_size(1280.0, 800.0)
                 .resizable(true)
@@ -446,12 +461,12 @@ async fn anynfs_select_domain(
                 })
                 .build()
                 .map_err(|e| e.to_string())?;
-            windows.insert(domain.clone(), w);
+            windows.insert(label.clone(), w);
         }
     }
     {
         let windows = state.windows.lock().map_err(|e| e.to_string())?;
-        if let Some(w) = windows.get(&domain) {
+        if let Some(w) = windows.get(&label) {
             let _ = w.show();
             let _ = w.set_focus();
         }
@@ -496,10 +511,11 @@ fn anynfs_toggle_fullscreen(state: tauri::State<'_, AppState>) -> Result<(), Str
     if domain.is_empty() {
         return Ok(());
     }
+    let label = domain_to_label(domain);
     let windows = state.windows.lock().map_err(|e| e.to_string())?;
     let w = windows
-        .get(domain)
-        .ok_or_else(|| format!("no webview for {domain}"))?;
+        .get(&label)
+        .ok_or_else(|| format!("no webview for {domain} (label {label})"))?;
     let fullscreen = w.is_fullscreen().map_err(|e| e.to_string())?;
     w.set_fullscreen(!fullscreen).map_err(|e| e.to_string())?;
     Ok(())
@@ -601,4 +617,30 @@ pub fn run() {
             }
         }
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::domain_to_label;
+
+    #[test]
+    fn domain_to_label_is_tauri_safe() {
+        let cases = [
+            ("nfsu2mod.xyz", "nfsu2mod-xyz"),
+            ("nfsu2.xyz", "nfsu2-xyz"),
+            ("nfscrb.xyz", "nfscrb-xyz"),
+            ("example.com", "example-com"),
+        ];
+        for (input, expected) in cases {
+            let label = domain_to_label(input);
+            assert_eq!(label, expected, "label for {input} should be {expected}");
+            // Every char must be in Tauri's allowed label set.
+            assert!(
+                label
+                    .chars()
+                    .all(|c| c.is_alphanumeric() || c == '-' || c == '/' || c == ':' || c == '_'),
+                "label '{label}' contains unsafe chars"
+            );
+        }
+    }
 }
