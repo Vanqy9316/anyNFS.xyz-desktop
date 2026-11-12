@@ -1,14 +1,12 @@
 [package]
 name = "app"
 version = "0.1.0"
-description = "A Tauri App"
+description = "anyNFS.xyz desktop — native Tauri MVP for nfsu2.xyz, nfsu2mod.xyz and nfscrb.xyz"
 authors = ["you"]
 license = ""
 repository = ""
 edition = "2024"
 rust-version = "1.90"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
 name = "app_lib"
@@ -18,8 +16,13 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
+anyhow = "1"
+image = "0.25"
 log = "0.4"
-tauri = { version = "2.12.5", features = [] }
+reqwest = { version = "0.12", features = ["json", "blocking"] }
+scraper = "0.21"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "2.12.5", features = ["custom-protocol"] }
 tauri-plugin-log = "2"
+tokio = { version = "1", features = ["rt"] }
