@@ -79,22 +79,19 @@ mod imp {
 
     pub(super) struct RpcClientImpl {
         stream: UnixStream,
-        client_id: String,
         connected: bool,
     }
 
     impl RpcClientImpl {
         pub(super) fn connect(client_id: u64) -> Result<Self, String> {
             let mut stream = connect_stream()?;
-            let client_id = client_id.to_string();
             // Handshake.
-            send_frame(&mut stream, 0, &json!({ "v": 1, "client_id": &client_id }))?;
+            send_frame(&mut stream, 0, &json!({ "v": 1, "client_id": &client_id.to_string() }))?;
             let resp = read_frame(&mut stream)?;
             let ready = resp.get("cmd").and_then(|v| v.as_str()) == Some("DISPATCH")
                 && resp.get("evt").and_then(|v| v.as_str()) == Some("READY");
             Ok(Self {
                 stream,
-                client_id,
                 connected: ready,
             })
         }
@@ -205,19 +202,6 @@ mod tests {
     use crate::rpc::initial_activity_value;
     use crate::scraping::Theme;
     use crate::RpcActivity;
-
-    fn sample_activity() -> RpcActivity {
-        RpcActivity {
-            details: "In Game".to_string(),
-            state: "Cruising Bayview".to_string(),
-            start_timestamp: Some(1_000_000),
-            large_image_key: Some("logo".to_string()),
-            large_image_text: Some("anyNFS.xyz — test".to_string()),
-            small_image_key: Some("logo".to_string()),
-            small_image_text: Some("test".to_string()),
-            instance: false,
-        }
-    }
 
     fn sample_manifest(domain: &str) -> RpcManifest {
         RpcManifest {

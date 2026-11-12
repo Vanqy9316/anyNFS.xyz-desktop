@@ -18,6 +18,7 @@ use reqwest::blocking::Client;
 const GITHUB_RAW: &str = "https://raw.githubusercontent.com/Vanqy9316/anyNFS.xyz-desktop/main";
 
 #[derive(Clone, Debug, Deserialize)]
+#[allow(dead_code)]
 pub struct DomainConfig {
     pub domain: String,
     pub name: String,
@@ -33,6 +34,7 @@ pub struct DomainConfig {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct RpcManifest {
+    #[allow(dead_code)]
     pub domain: String,
     #[serde(default)]
     pub details: String,

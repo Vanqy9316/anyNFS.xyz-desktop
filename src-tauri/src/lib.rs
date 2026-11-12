@@ -336,7 +336,6 @@ struct RpcActivity {
 
 struct AppState {
     cache_root: PathBuf,
-    domains: Arc<Mutex<Vec<String>>>,
     current: Arc<Mutex<Option<String>>>,
     themes: Arc<Mutex<HashMap<String, Theme>>>,
     icons: Arc<Mutex<HashMap<String, (Vec<u8>, u32, u32)>>>,
@@ -545,11 +544,6 @@ pub fn run() {
 
             let state = AppState {
                 cache_root,
-                domains: Arc::new(Mutex::new(vec![
-                    "nfsu2mod.xyz".to_string(),
-                    "nfsu2.xyz".to_string(),
-                    "nfscrb.xyz".to_string(),
-                ])),
                 current: Arc::new(Mutex::new(None)),
                 themes: Arc::new(Mutex::new(HashMap::new())),
                 icons: Arc::new(Mutex::new(HashMap::new())),
